@@ -6,7 +6,7 @@ export { isTauri };
 
 const log = loggers.app;
 
-// 最小窗口尺寸
+// 最小窗口尺寸（物理像素，100% 缩放下等于逻辑像素）
 export const MIN_WINDOW_WIDTH = 800;
 export const MIN_WINDOW_HEIGHT = 500;
 
@@ -39,7 +39,7 @@ export async function setWindowTitle(title: string) {
 }
 
 /**
- * 设置窗口大小
+ * 设置窗口大小（物理像素）
  */
 export async function setWindowSize(width: number, height: number) {
   if (!isValidWindowSize(width, height)) {
@@ -50,9 +50,9 @@ export async function setWindowSize(width: number, height: number) {
   if (isTauri()) {
     try {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
-      const { LogicalSize } = await import('@tauri-apps/api/dpi');
+      const { PhysicalSize } = await import('@tauri-apps/api/dpi');
       const currentWindow = getCurrentWindow();
-      await currentWindow.setSize(new LogicalSize(width, height));
+      await currentWindow.setSize(new PhysicalSize(width, height));
     } catch (err) {
       log.warn('设置窗口大小失败:', err);
     }
@@ -60,15 +60,15 @@ export async function setWindowSize(width: number, height: number) {
 }
 
 /**
- * 设置窗口位置
+ * 设置窗口位置（物理像素）
  */
 export async function setWindowPosition(x: number, y: number) {
   if (isTauri()) {
     try {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
-      const { LogicalPosition } = await import('@tauri-apps/api/dpi');
+      const { PhysicalPosition } = await import('@tauri-apps/api/dpi');
       const currentWindow = getCurrentWindow();
-      await currentWindow.setPosition(new LogicalPosition(x, y));
+      await currentWindow.setPosition(new PhysicalPosition(x, y));
     } catch (err) {
       log.warn('设置窗口位置失败:', err);
     }
@@ -76,7 +76,7 @@ export async function setWindowPosition(x: number, y: number) {
 }
 
 /**
- * 获取当前窗口位置
+ * 获取当前窗口位置（物理像素）
  */
 export async function getWindowPosition(): Promise<{ x: number; y: number } | null> {
   if (isTauri()) {
@@ -84,12 +84,7 @@ export async function getWindowPosition(): Promise<{ x: number; y: number } | nu
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
       const currentWindow = getCurrentWindow();
       const position = await currentWindow.outerPosition();
-      const scaleFactor = await currentWindow.scaleFactor();
-      // 转换为逻辑像素
-      return {
-        x: Math.round(position.x / scaleFactor),
-        y: Math.round(position.y / scaleFactor),
-      };
+      return { x: position.x, y: position.y };
     } catch (err) {
       log.warn('获取窗口位置失败:', err);
     }
@@ -98,7 +93,7 @@ export async function getWindowPosition(): Promise<{ x: number; y: number } | nu
 }
 
 /**
- * 获取当前窗口大小
+ * 获取当前窗口大小（物理像素）
  */
 export async function getWindowSize(): Promise<{ width: number; height: number } | null> {
   if (isTauri()) {
@@ -106,12 +101,7 @@ export async function getWindowSize(): Promise<{ width: number; height: number }
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
       const currentWindow = getCurrentWindow();
       const size = await currentWindow.innerSize();
-      const scaleFactor = await currentWindow.scaleFactor();
-      // 转换为逻辑像素
-      return {
-        width: Math.round(size.width / scaleFactor),
-        height: Math.round(size.height / scaleFactor),
-      };
+      return { width: size.width, height: size.height };
     } catch (err) {
       log.warn('获取窗口大小失败:', err);
     }
