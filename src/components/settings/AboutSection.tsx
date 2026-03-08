@@ -104,9 +104,9 @@ export function AboutSection() {
             </span>
           </div>
           <h3 className="text-xl font-bold text-text-primary">{projectName}</h3>
-          <p className="text-sm text-text-secondary mt-1">
+          {/* <p className="text-sm text-text-secondary mt-1">
             {t('about.version')}: {version}
-          </p>
+          </p> */}
         </div>
 
         {/* 内容加载中 */}
