@@ -1,0 +1,17 @@
+# 构建产物
+dist/
+build/
+node_modules/
+target/
+
+# Tauri 相关
+src-tauri/target/
+
+# 锁文件
+pnpm-lock.yaml
+package-lock.json
+Cargo.lock
+
+# 其他
+*.min.js
+*.min.css
