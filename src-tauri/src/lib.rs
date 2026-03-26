@@ -81,15 +81,15 @@ pub fn run() {
                 }
             }
 
-            // 启动时自动加载 MaaFramework DLL
-            if let Ok(maafw_dir) = commands::get_maafw_dir() {
-                if maafw_dir.exists() {
+            // 启动时自动加载 MaaFramework DLL（支持 maafw 根目录或 maafw/bin CMake 安装布局）
+            if let Ok(lib_dir) = commands::get_maafw_lib_dir() {
+                if lib_dir.exists() {
                     #[cfg(windows)]
-                    let dll_path = maafw_dir.join("MaaFramework.dll");
+                    let dll_path = lib_dir.join("MaaFramework.dll");
                     #[cfg(target_os = "macos")]
-                    let dll_path = maafw_dir.join("libMaaFramework.dylib");
+                    let dll_path = lib_dir.join("libMaaFramework.dylib");
                     #[cfg(target_os = "linux")]
-                    let dll_path = maafw_dir.join("libMaaFramework.so");
+                    let dll_path = lib_dir.join("libMaaFramework.so");
 
                     match maa_framework::load_library(&dll_path) {
                         Ok(()) => log::info!("MaaFramework loaded from {:?}", dll_path),
@@ -107,7 +107,7 @@ pub fn run() {
                         }
                     }
                 } else {
-                    log::warn!("MaaFramework directory not found: {:?}", maafw_dir);
+                    log::warn!("MaaFramework directory not found: {:?}", lib_dir);
                 }
             }
 

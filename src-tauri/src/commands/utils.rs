@@ -137,9 +137,40 @@ pub fn get_exe_directory() -> Result<PathBuf, String> {
     Ok(exe_dir)
 }
 
-/// 获取可执行文件所在目录下的 maafw 子目录
+/// 获取可执行文件所在目录下的 maafw 子目录（资源根，不区分 bin 布局）
 pub fn get_maafw_dir() -> Result<PathBuf, String> {
     Ok(get_exe_directory()?.join("maafw"))
+}
+
+/// 实际包含 MaaFramework 动态库的目录（用于 LoadLibrary / SetDllDirectoryW）。
+///
+/// 官方文档将 `bin` 内文件铺在 `maafw` 根下；CMake `install` 常见布局为 `maafw/bin/*.dll`。
+#[cfg(windows)]
+fn maa_framework_lib_filename() -> &'static str {
+    "MaaFramework.dll"
+}
+
+#[cfg(target_os = "macos")]
+fn maa_framework_lib_filename() -> &'static str {
+    "libMaaFramework.dylib"
+}
+
+#[cfg(target_os = "linux")]
+fn maa_framework_lib_filename() -> &'static str {
+    "libMaaFramework.so"
+}
+
+pub fn get_maafw_lib_dir() -> Result<PathBuf, String> {
+    let base = get_maafw_dir()?;
+    let name = maa_framework_lib_filename();
+    if base.join(name).exists() {
+        return Ok(base);
+    }
+    let in_bin = base.join("bin").join(name);
+    if in_bin.exists() {
+        return Ok(base.join("bin"));
+    }
+    Ok(base)
 }
 
 /// 构建 User-Agent 字符串

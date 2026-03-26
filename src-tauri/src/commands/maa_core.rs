@@ -22,7 +22,7 @@ use super::types::{
     AdbDevice, ConnectionStatus, ControllerConfig, MaaState, TaskStatus, VersionCheckResult,
     Win32Window,
 };
-use super::utils::{emit_callback_event, get_maafw_dir, normalize_path};
+use super::utils::{emit_callback_event, get_maafw_dir, get_maafw_lib_dir, normalize_path};
 
 /// MaaFramework 最小支持版本
 const MIN_MAAFW_VERSION: &str = "5.5.0-beta.1";
@@ -254,7 +254,7 @@ pub fn maa_init(state: State<Arc<MaaState>>, lib_dir: Option<String>) -> Result<
 
     let lib_path = match lib_dir {
         Some(dir) if !dir.is_empty() => std::path::PathBuf::from(&dir),
-        _ => get_maafw_dir()?,
+        _ => get_maafw_lib_dir()?,
     };
 
     info!("maa_init using path: {:?}", lib_path);

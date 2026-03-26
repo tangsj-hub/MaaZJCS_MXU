@@ -31,7 +31,7 @@ pub use types::MaaState;
 
 // 重新导出辅助函数（供 lib.rs 使用）
 pub use update::cleanup_dir_contents;
-pub use utils::get_maafw_dir;
+pub use utils::{get_maafw_dir, get_maafw_lib_dir};
 
 // 重新导出 Tauri 命令（供 lib.rs 直接调用的函数）
 pub use file_ops::get_data_dir;

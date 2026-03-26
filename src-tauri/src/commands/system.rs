@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use super::types::SystemInfo;
 use super::types::WebView2DirInfo;
-use super::utils::get_maafw_dir;
+use super::utils::get_maafw_lib_dir;
 
 /// 标记是否检测到可能缺少 VC++ 运行库
 static VCREDIST_MISSING: AtomicBool = AtomicBool::new(false);
@@ -499,18 +499,18 @@ pub async fn run_action(
 pub async fn retry_load_maa_library() -> Result<String, String> {
     info!("retry_load_maa_library");
 
-    let maafw_dir = get_maafw_dir()?;
-    if !maafw_dir.exists() {
+    let lib_dir = get_maafw_lib_dir()?;
+    if !lib_dir.exists() {
         return Err("MaaFramework directory not found".to_string());
     }
 
     // Load library
     #[cfg(windows)]
-    let dll_path = maafw_dir.join("MaaFramework.dll");
+    let dll_path = lib_dir.join("MaaFramework.dll");
     #[cfg(target_os = "macos")]
-    let dll_path = maafw_dir.join("libMaaFramework.dylib");
+    let dll_path = lib_dir.join("libMaaFramework.dylib");
     #[cfg(target_os = "linux")]
-    let dll_path = maafw_dir.join("libMaaFramework.so");
+    let dll_path = lib_dir.join("libMaaFramework.so");
 
     maa_framework::load_library(&dll_path).map_err(|e| e.to_string())?;
 
