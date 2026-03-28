@@ -707,10 +707,11 @@ function App() {
             downloadSource: pendingUpdate.downloadSource,
           });
           setDownloadSavePath(pendingUpdate.downloadSavePath);
-          setDownloadStatus('completed');
-          // 显示安装确认模态框并自动开始安装
-          setShowInstallConfirmModal(true);
+          // 先设置 installStatus，再设置 downloadStatus，
+          // 避免 subscribe 在 installStatus 还是 idle 时触发 tryAutoInstallUpdate 造成双发
           useAppStore.getState().setInstallStatus('installing');
+          setDownloadStatus('completed');
+          setShowInstallConfirmModal(true);
           return;
         }
       }

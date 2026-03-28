@@ -215,6 +215,9 @@ export function InstallConfirmModal() {
   useEffect(() => {
     if (showInstallConfirmModal && autoInstallPending && installStatus === 'idle') {
       setAutoInstallPending(false);
+      // 标记已触发，防止 handleInstall 设置 installStatus='installing' 后
+      // 上方的 installStatus==='installing' effect 再次调用 installUpdate（竞态双发）
+      autoInstallTriggered.current = true;
       handleInstall();
     }
   }, [

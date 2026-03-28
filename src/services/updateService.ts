@@ -21,6 +21,8 @@ const log = loggers.app;
 let isDownloading = false;
 // 下载是否被用户主动取消
 let downloadCancelled = false;
+// 安装互斥锁，防止并发 installUpdate 导致目录竞争
+let isInstalling = false;
 
 /**
  * 将文件移动到 cache/old 文件夹（调用 Rust 端统一实现）
@@ -940,138 +942,148 @@ export function isExecutableInstaller(filePath: string): boolean {
  * 7. 如果失败，尝试兜底：创建 v版本号 文件夹
  */
 export async function installUpdate(options: InstallUpdateOptions): Promise<boolean> {
+  if (isInstalling) {
+    log.warn('installUpdate: 已有安装正在进行，跳过重复调用');
+    return false;
+  }
+  isInstalling = true;
+
   const { zipPath, targetDir, newVersion, projectName, onProgress } = options;
 
   log.info(`开始安装更新: ${zipPath} -> ${targetDir}`);
 
-  await backupConfigBeforeUpdate(targetDir, projectName);
-
-  // 对于 exe/dmg 文件，直接打开而不是解压
-  if (isExecutableInstaller(zipPath)) {
-    log.info(`检测到可执行安装程序，直接打开: ${zipPath}`);
-    onProgress?.('opening', zipPath);
-
-    try {
-      // 在 Unix 系统上设置执行权限（Windows 上此调用无操作）
-      await invoke('set_executable', { filePath: zipPath });
-
-      await openPath(zipPath);
-      log.info('已打开安装程序');
-      onProgress?.('done');
-      return true;
-    } catch (error) {
-      log.error('打开安装程序失败:', error);
-      throw error;
-    }
-  }
-
-  // 生成临时解压目录
-  const extractDir = joinPath(await dirname(zipPath), 'update_extract');
-
   try {
-    // 先清理上次可能残留的解压目录，避免历史文件混入本次更新
-    await invoke('cleanup_extract_dir', { extractDir }).catch(() => {});
+    await backupConfigBeforeUpdate(targetDir, projectName);
 
-    // 1. 解压更新包
-    onProgress?.('extracting', zipPath);
-    log.info(`解压更新包到: ${extractDir}`);
+    // 对于 exe/dmg 文件，直接打开而不是解压
+    if (isExecutableInstaller(zipPath)) {
+      log.info(`检测到可执行安装程序，直接打开: ${zipPath}`);
+      onProgress?.('opening', zipPath);
 
-    await invoke('extract_zip', {
-      zipPath,
-      destDir: extractDir,
-    });
+      try {
+        // 在 Unix 系统上设置执行权限（Windows 上此调用无操作）
+        await invoke('set_executable', { filePath: zipPath });
 
-    // 2. 检查是否为增量包
-    onProgress?.('checking', 'changes.json');
-    log.info('检查更新包类型...');
-
-    const changesJson = await invoke<ChangesJson | null>('check_changes_json', {
-      extractDir,
-    });
-
-    if (changesJson) {
-      // 增量更新
-      log.info(
-        `增量更新: deleted=${changesJson.deleted.length}, added=${
-          changesJson.added.length
-        }, modified=${changesJson.modified.length}`,
-      );
-      onProgress?.('applying', 'incremental');
-
-      await invoke('apply_incremental_update', {
-        extractDir,
-        targetDir,
-        deletedFiles: changesJson.deleted,
-      });
-    } else {
-      // 全量更新
-      log.info('全量更新');
-      onProgress?.('applying', 'full');
-
-      await invoke('apply_full_update', {
-        extractDir,
-        targetDir,
-      });
+        await openPath(zipPath);
+        log.info('已打开安装程序');
+        onProgress?.('done');
+        return true;
+      } catch (error) {
+        log.error('打开安装程序失败:', error);
+        throw error;
+      }
     }
 
-    // 3. 清理临时文件
-    onProgress?.('cleanup');
-    log.info('清理临时文件...');
+    // 生成临时解压目录
+    const extractDir = joinPath(await dirname(zipPath), 'update_extract');
 
-    await invoke('cleanup_extract_dir', { extractDir });
-
-    // 将下载的 zip 文件移动到 old 文件夹
-    await moveToOldFolder(zipPath);
-
-    // 清理更新残留产物：target_dir/changes.json 和 cache/*.downloading
-    const cacheDir = await getCacheDir();
-    await invoke('cleanup_update_artifacts', { targetDir, cacheDir }).catch((e) => {
-      log.warn('清理更新残留产物失败（忽略）:', e);
-    });
-
-    log.info('更新安装完成');
-    onProgress?.('done');
-
-    return true;
-  } catch (error) {
-    log.error('更新安装失败:', error);
-
-    // 兜底逻辑：尝试将新文件解压到 v版本号 文件夹
     try {
-      log.info('尝试兜底更新...');
-      onProgress?.('fallback', newVersion);
+      // 先清理上次可能残留的解压目录，避免历史文件混入本次更新
+      await invoke('cleanup_extract_dir', { extractDir }).catch(() => {});
 
-      const fallbackDir = await invoke<string>('fallback_update', {
-        extractDir,
-        targetDir,
-        newVersion,
+      // 1. 解压更新包
+      onProgress?.('extracting', zipPath);
+      log.info(`解压更新包到: ${extractDir}`);
+
+      await invoke('extract_zip', {
+        zipPath,
+        destDir: extractDir,
       });
 
-      log.info(`兜底更新成功，新文件已解压到: ${fallbackDir}`);
+      // 2. 检查是否为增量包
+      onProgress?.('checking', 'changes.json');
+      log.info('检查更新包类型...');
 
-      // 清理临时解压目录
-      await invoke('cleanup_extract_dir', { extractDir }).catch(() => {});
-      // 清理下载的 zip 文件
-      await moveToOldFolder(zipPath);
+      const changesJson = await invoke<ChangesJson | null>('check_changes_json', {
+        extractDir,
+      });
 
-      // 抛出特殊错误，告知用户可以使用兜底文件夹
-      throw new FallbackUpdateError(
-        `更新失败，但已将新版本文件解压到 ${fallbackDir}，您可以临时使用该文件夹中的程序`,
-        fallbackDir,
-      );
-    } catch (fallbackError) {
-      // 如果是兜底错误，直接抛出
-      if (fallbackError instanceof FallbackUpdateError) {
-        throw fallbackError;
+      if (changesJson) {
+        // 增量更新
+        log.info(
+          `增量更新: deleted=${changesJson.deleted.length}, added=${
+            changesJson.added.length
+          }, modified=${changesJson.modified.length}`,
+        );
+        onProgress?.('applying', 'incremental');
+
+        await invoke('apply_incremental_update', {
+          extractDir,
+          targetDir,
+          deletedFiles: changesJson.deleted,
+        });
+      } else {
+        // 全量更新
+        log.info('全量更新');
+        onProgress?.('applying', 'full');
+
+        await invoke('apply_full_update', {
+          extractDir,
+          targetDir,
+        });
       }
 
-      log.error('兜底更新也失败:', fallbackError);
+      // 3. 清理临时文件
+      onProgress?.('cleanup');
+      log.info('清理临时文件...');
 
-      // 尝试清理临时目录
-      await invoke('cleanup_extract_dir', { extractDir }).catch(() => {});
+      await invoke('cleanup_extract_dir', { extractDir });
 
-      throw error; // 抛出原始错误
+      // 将下载的 zip 文件移动到 old 文件夹
+      await moveToOldFolder(zipPath);
+
+      // 清理更新残留产物：target_dir/changes.json 和 cache/*.downloading
+      const cacheDir = await getCacheDir();
+      await invoke('cleanup_update_artifacts', { targetDir, cacheDir }).catch((e) => {
+        log.warn('清理更新残留产物失败（忽略）:', e);
+      });
+
+      log.info('更新安装完成');
+      onProgress?.('done');
+
+      return true;
+    } catch (error) {
+      log.error('更新安装失败:', error);
+
+      // 兜底逻辑：尝试将新文件解压到 v版本号 文件夹
+      try {
+        log.info('尝试兜底更新...');
+        onProgress?.('fallback', newVersion);
+
+        const fallbackDir = await invoke<string>('fallback_update', {
+          extractDir,
+          targetDir,
+          newVersion,
+        });
+
+        log.info(`兜底更新成功，新文件已解压到: ${fallbackDir}`);
+
+        // 清理临时解压目录
+        await invoke('cleanup_extract_dir', { extractDir }).catch(() => {});
+        // 清理下载的 zip 文件
+        await moveToOldFolder(zipPath);
+
+        // 抛出特殊错误，告知用户可以使用兜底文件夹
+        throw new FallbackUpdateError(
+          `更新失败，但已将新版本文件解压到 ${fallbackDir}，您可以临时使用该文件夹中的程序`,
+          fallbackDir,
+        );
+      } catch (fallbackError) {
+        // 如果是兜底错误，直接抛出
+        if (fallbackError instanceof FallbackUpdateError) {
+          throw fallbackError;
+        }
+
+        log.error('兜底更新也失败:', fallbackError);
+
+        // 尝试清理临时目录
+        await invoke('cleanup_extract_dir', { extractDir }).catch(() => {});
+
+        throw error; // 抛出原始错误
+      }
     }
+  } finally {
+    isInstalling = false;
   }
 }
 
