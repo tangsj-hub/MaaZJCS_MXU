@@ -343,7 +343,7 @@ export interface AppState {
   minimizeToTray: boolean;
   setMinimizeToTray: (enabled: boolean) => void;
 
-  // 是否为开机自启动模式（无人值守，不自动安装更新）
+  // 是否为开机自启动模式（无人值守，跳过阻塞式弹窗）
   isAutoStartMode: boolean;
   setIsAutoStartMode: (mode: boolean) => void;
 
