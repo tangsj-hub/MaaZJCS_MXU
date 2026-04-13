@@ -23,53 +23,57 @@ export type ImportError = 'invalid_format' | 'project_mismatch' | 'unsupported_v
 // 仅在 wire 格式中使用，不对外暴露
 
 type WireOptionValue =
-  | { t: 's'; c: string }       // select:   caseName
-  | { t: 'cb'; c: string[] }    // checkbox: caseNames
-  | { t: 'sw'; v: boolean }     // switch:   value
+  | { t: 's'; c: string } // select:   caseName
+  | { t: 'cb'; c: string[] } // checkbox: caseNames
+  | { t: 'sw'; v: boolean } // switch:   value
   | { t: 'in'; v: Record<string, string> }; // input: values
 
 interface WireTask {
-  i: string;           // id
-  tn: string;          // taskName
-  cn?: string;         // customName
-  e: boolean;          // enabled
+  i: string; // id
+  tn: string; // taskName
+  cn?: string; // customName
+  e: boolean; // enabled
   ov: Record<string, WireOptionValue>; // optionValues
 }
 
 interface WireAction {
-  i: string;           // id
-  cn?: string;         // customName
-  e: boolean;          // enabled
-  p: string;           // program
-  a: string;           // args
-  w: boolean;          // waitForExit
-  s: boolean;          // skipIfRunning
-  u: boolean;          // useCmd
+  i: string; // id
+  cn?: string; // customName
+  e: boolean; // enabled
+  p: string; // program
+  a: string; // args
+  w: boolean; // waitForExit
+  s: boolean; // skipIfRunning
+  u: boolean; // useCmd
 }
 
 interface WirePayload {
-  cn?: string;         // controllerName
-  rn?: string;         // resourceName
-  t: WireTask[];       // selectedTasks
-  pa?: WireAction[];   // preActions
+  cn?: string; // controllerName
+  rn?: string; // resourceName
+  t: WireTask[]; // selectedTasks
+  pa?: WireAction[]; // preActions
 }
 
 // ── 序列化：业务结构 → 短 key wire 格式 ─────────────────────────────────────
 
 function encodeOptionValue(v: OptionValue): WireOptionValue {
   switch (v.type) {
-    case 'select':   return { t: 's',  c: v.caseName };
-    case 'checkbox': return { t: 'cb', c: v.caseNames };
-    case 'switch':   return { t: 'sw', v: v.value };
-    case 'input':    return { t: 'in', v: v.values };
+    case 'select':
+      return { t: 's', c: v.caseName };
+    case 'checkbox':
+      return { t: 'cb', c: v.caseNames };
+    case 'switch':
+      return { t: 'sw', v: v.value };
+    case 'input':
+      return { t: 'in', v: v.values };
   }
 }
 
 function encodeTask(task: SavedTask): WireTask {
   const wire: WireTask = {
-    i:  task.id,
+    i: task.id,
     tn: task.taskName,
-    e:  task.enabled,
+    e: task.enabled,
     ov: Object.fromEntries(
       Object.entries(task.optionValues).map(([k, v]) => [k, encodeOptionValue(v)]),
     ),
@@ -97,8 +101,8 @@ function encodePayload(payload: TabExportPayload): WirePayload {
     t: payload.selectedTasks.map(encodeTask),
   };
   if (payload.controllerName !== undefined) wire.cn = payload.controllerName;
-  if (payload.resourceName   !== undefined) wire.rn = payload.resourceName;
-  if (payload.preActions?.length)           wire.pa = payload.preActions.map(encodeAction);
+  if (payload.resourceName !== undefined) wire.rn = payload.resourceName;
+  if (payload.preActions?.length) wire.pa = payload.preActions.map(encodeAction);
   return wire;
 }
 
@@ -106,20 +110,25 @@ function encodePayload(payload: TabExportPayload): WirePayload {
 
 function decodeOptionValue(w: WireOptionValue): OptionValue {
   switch (w.t) {
-    case 's':  return { type: 'select',   caseName:  w.c };
-    case 'cb': return { type: 'checkbox', caseNames: w.c };
-    case 'sw': return { type: 'switch',   value:     w.v };
-    case 'in': return { type: 'input',    values:    w.v };
-    default:   throw new Error('invalid_format');
+    case 's':
+      return { type: 'select', caseName: w.c };
+    case 'cb':
+      return { type: 'checkbox', caseNames: w.c };
+    case 'sw':
+      return { type: 'switch', value: w.v };
+    case 'in':
+      return { type: 'input', values: w.v };
+    default:
+      throw new Error('invalid_format');
   }
 }
 
 function decodeTask(w: WireTask): SavedTask {
   return {
-    id:           w.i,
-    taskName:     w.tn,
-    customName:   w.cn,
-    enabled:      w.e,
+    id: w.i,
+    taskName: w.tn,
+    customName: w.cn,
+    enabled: w.e,
     optionValues: Object.fromEntries(
       Object.entries(w.ov).map(([k, v]) => [k, decodeOptionValue(v)]),
     ),
@@ -128,23 +137,23 @@ function decodeTask(w: WireTask): SavedTask {
 
 function decodeAction(w: WireAction): ActionConfig {
   return {
-    id:            w.i,
-    customName:    w.cn,
-    enabled:       w.e,
-    program:       w.p,
-    args:          w.a,
-    waitForExit:   w.w,
+    id: w.i,
+    customName: w.cn,
+    enabled: w.e,
+    program: w.p,
+    args: w.a,
+    waitForExit: w.w,
     skipIfRunning: w.s,
-    useCmd:        w.u,
+    useCmd: w.u,
   };
 }
 
 function decodePayload(wire: WirePayload): TabExportPayload {
   return {
     controllerName: wire.cn,
-    resourceName:   wire.rn,
-    selectedTasks:  wire.t.map(decodeTask),
-    preActions:     wire.pa?.map(decodeAction),
+    resourceName: wire.rn,
+    selectedTasks: wire.t.map(decodeTask),
+    preActions: wire.pa?.map(decodeAction),
   };
 }
 
@@ -233,12 +242,12 @@ export async function exportTabConfig(
 ): Promise<void> {
   const payload: TabExportPayload = {
     controllerName: instance.controllerName,
-    resourceName:   instance.resourceName,
-    selectedTasks:  instance.selectedTasks.map((t) => ({
-      id:           t.id,
-      taskName:     t.taskName,
-      customName:   t.customName,
-      enabled:      t.enabled,
+    resourceName: instance.resourceName,
+    selectedTasks: instance.selectedTasks.map((t) => ({
+      id: t.id,
+      taskName: t.taskName,
+      customName: t.customName,
+      enabled: t.enabled,
       optionValues: t.optionValues,
     })),
     preActions: instance.preActions,
@@ -260,9 +269,7 @@ export async function exportTabConfig(
  * 从剪贴板读取并解析 Tab 配置导入数据。
  * 返回解析后的 tabName + payload，或抛出带有 ImportError 类型的错误。
  */
-export async function importTabConfigFromClipboard(
-  projectName: string,
-): Promise<TabImportResult> {
+export async function importTabConfigFromClipboard(projectName: string): Promise<TabImportResult> {
   const rawText = (await navigator.clipboard.readText()).trim();
 
   const escapedSegment = PROTOCOL_SEGMENT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

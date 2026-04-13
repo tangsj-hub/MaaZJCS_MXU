@@ -107,7 +107,8 @@ export default {
     autoRunOnLaunchHint:
       'Automatically execute the selected configuration when manually opening the app (if disabled, only triggers on system startup)',
     confirmBeforeDelete: 'Confirm delete actions',
-    confirmBeforeDeleteHint: 'Show a confirmation dialog before delete/clear list and other dangerous actions.',
+    confirmBeforeDeleteHint:
+      'Show a confirmation dialog before delete/clear list and other dangerous actions.',
     maxLogsPerInstance: 'Max logs per instance',
     maxLogsPerInstanceHint:
       'Oldest logs will be discarded when exceeding the limit (recommended 500–2000)',
@@ -346,7 +347,8 @@ export default {
     exportSuccess: 'Config copied to clipboard',
     exportFailed: 'Export failed: unable to write to clipboard',
     exportShareHint: 'Sharing my {{projectName}} config "{{tabName}}" with you~',
-    exportShareFooter: '👆 Copy this message, open {{projectName}}, create a new tab, and tap "Import Config" to use it instantly',
+    exportShareFooter:
+      '👆 Copy this message, open {{projectName}}, create a new tab, and tap "Import Config" to use it instantly',
   },
 
   // Controller

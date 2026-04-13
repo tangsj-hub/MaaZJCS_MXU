@@ -58,9 +58,10 @@ import {
 import type { AppState, LogEntry, TaskRunStatus } from './types';
 
 /** 向后兼容：将旧版单个 preAction 迁移为 preActions 数组 */
-function migratePreActions(
-  inst: { preActions?: ActionConfig[]; preAction?: LegacyActionConfig },
-): ActionConfig[] | undefined {
+function migratePreActions(inst: {
+  preActions?: ActionConfig[];
+  preAction?: LegacyActionConfig;
+}): ActionConfig[] | undefined {
   if (inst.preActions && inst.preActions.length > 0) {
     return inst.preActions.map((a) => (a.id ? a : { ...a, id: generateId() }));
   }
@@ -1369,9 +1370,7 @@ export const useAppStore = create<AppState>()(
     addPreAction: (instanceId: string, action: ActionConfig) =>
       set((state) => ({
         instances: state.instances.map((i) =>
-          i.id === instanceId
-            ? { ...i, preActions: [...(i.preActions || []), action] }
-            : i,
+          i.id === instanceId ? { ...i, preActions: [...(i.preActions || []), action] } : i,
         ),
       })),
 

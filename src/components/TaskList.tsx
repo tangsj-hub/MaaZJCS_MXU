@@ -34,7 +34,11 @@ import { ContextMenu, useContextMenu, type MenuItem } from './ContextMenu';
 import type { PresetItem } from '@/types/interface';
 import { getInterfaceLangKey } from '@/i18n';
 import { useResolvedContent } from '@/services/contentResolver';
-import { exportWithToast, importTabConfigFromClipboard, getImportErrorType } from '@/utils/tabExportImport';
+import {
+  exportWithToast,
+  importTabConfigFromClipboard,
+  getImportErrorType,
+} from '@/utils/tabExportImport';
 import { generateId } from '@/stores/helpers';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -88,8 +92,13 @@ function PresetCard({ preset, onApply }: { preset: PresetItem; onApply: () => vo
 
 /** 导入按钮 */
 function ImportConfigButton({ instanceId }: { instanceId: string }) {
-  const { projectInterface, updateInstance, renameInstance, setSelectedController, setSelectedResource } =
-    useAppStore();
+  const {
+    projectInterface,
+    updateInstance,
+    renameInstance,
+    setSelectedController,
+    setSelectedResource,
+  } = useAppStore();
   const { t } = useTranslation();
 
   const handleImport = async () => {
@@ -328,7 +337,16 @@ export function TaskList() {
 
       showMenu(e, menuItems);
     },
-    [t, instance, showAddTaskPanel, setShowAddTaskPanel, selectAllTasks, collapseAllTasks, showMenu, projectInterface],
+    [
+      t,
+      instance,
+      showAddTaskPanel,
+      setShowAddTaskPanel,
+      selectAllTasks,
+      collapseAllTasks,
+      showMenu,
+      projectInterface,
+    ],
   );
 
   if (!instance) {
@@ -478,7 +496,6 @@ export function TaskList() {
       {menuState.isOpen && (
         <ContextMenu items={menuState.items} position={menuState.position} onClose={hideMenu} />
       )}
-
     </>
   );
 }

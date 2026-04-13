@@ -76,19 +76,14 @@ export function ActionItem({
     disabled: !canReorder,
   });
 
-  const constrainedTransform = transform
-    ? { ...transform, x: 0, scaleX: 1, scaleY: 1 }
-    : null;
+  const constrainedTransform = transform ? { ...transform, x: 0, scaleX: 1, scaleY: 1 } : null;
 
   const style = {
     transform: CSS.Transform.toString(constrainedTransform),
     transition,
   };
 
-  const currentAction = useMemo<ActionConfig>(
-    () => ({ ...defaultValues, ...action }),
-    [action],
-  );
+  const currentAction = useMemo<ActionConfig>(() => ({ ...defaultValues, ...action }), [action]);
 
   const defaultTitle = t('action.preAction');
   const displayName = currentAction.customName || defaultTitle;
@@ -258,9 +253,7 @@ export function ActionItem({
                   {displayName}
                 </span>
                 {currentAction.customName && (
-                  <span className="min-w-0 truncate text-xs text-text-muted">
-                    ({defaultTitle})
-                  </span>
+                  <span className="min-w-0 truncate text-xs text-text-muted">({defaultTitle})</span>
                 )}
               </div>
 

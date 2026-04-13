@@ -341,7 +341,8 @@ export default {
     exportSuccess: '設定をクリップボードにコピーしました',
     exportFailed: 'エクスポート失敗：クリップボードに書き込めません',
     exportShareHint: '{{projectName}} の「{{tabName}}」設定をシェアするよ～',
-    exportShareFooter: '👆 このメッセージをコピーして、{{projectName}} で新しいタブを開き「設定をインポート」を押すだけでOK',
+    exportShareFooter:
+      '👆 このメッセージをコピーして、{{projectName}} で新しいタブを開き「設定をインポート」を押すだけでOK',
   },
 
   // コントローラー

@@ -278,7 +278,18 @@ export function TabBar() {
 
       showMenu(e, menuItems);
     },
-    [instances, t, createInstance, duplicateInstance, removeInstance, reorderInstances, showMenu, projectInterface, confirmBeforeDelete, startTabCloseAnimation],
+    [
+      instances,
+      t,
+      createInstance,
+      duplicateInstance,
+      removeInstance,
+      reorderInstances,
+      showMenu,
+      projectInterface,
+      confirmBeforeDelete,
+      startTabCloseAnimation,
+    ],
   );
 
   // 基于鼠标事件的拖拽实现（更可靠，兼容 Tauri）
