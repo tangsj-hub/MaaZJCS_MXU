@@ -246,21 +246,16 @@ async fn start_single_agent(
             )
         })?;
 
-        // 创建 agent 日志文件（多 agent、多实例时使用不同文件名，包含进程 PID）
+        // agent 日志文件路径（延迟创建：仅在有实际输出时才打开文件）
         let pid = child.id();
         let log_filename = format!("mxu-agent-{}-{}.log", agent_index, pid);
-        let agent_log_file = get_logs_dir().join(&log_filename);
-        let log_file = Arc::new(Mutex::new(
-            OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(&agent_log_file)
-                .ok(),
-        ));
+        let agent_log_path = Arc::new(get_logs_dir().join(&log_filename));
+        let log_file: Arc<Mutex<Option<std::fs::File>>> = Arc::new(Mutex::new(None));
 
         // 在单独线程中读取 stdout
         if let Some(stdout) = child.stdout.take() {
             let lf = log_file.clone();
+            let lf_path = agent_log_path.clone();
             let app_handle = app.clone();
             let inst_id = instance_id.clone();
             thread::spawn(move || {
@@ -274,6 +269,13 @@ async fn start_single_agent(
                             let line = String::from_utf8_lossy(&buffer);
                             let clean_line = line.trim_end();
                             if let Ok(mut guard) = lf.lock() {
+                                if guard.is_none() {
+                                    *guard = OpenOptions::new()
+                                        .create(true)
+                                        .append(true)
+                                        .open(lf_path.as_ref())
+                                        .ok();
+                                }
                                 if let Some(file) = guard.as_mut() {
                                     let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S");
                                     let _ = writeln!(file, "{} [stdout] {}", timestamp, clean_line);
@@ -291,6 +293,7 @@ async fn start_single_agent(
         // Stderr thread
         if let Some(stderr) = child.stderr.take() {
             let lf = log_file.clone();
+            let lf_path = agent_log_path.clone();
             let app_handle = app.clone();
             let inst_id = instance_id.clone();
             thread::spawn(move || {
@@ -304,6 +307,13 @@ async fn start_single_agent(
                             let line = String::from_utf8_lossy(&buffer);
                             let clean_line = line.trim_end();
                             if let Ok(mut guard) = lf.lock() {
+                                if guard.is_none() {
+                                    *guard = OpenOptions::new()
+                                        .create(true)
+                                        .append(true)
+                                        .open(lf_path.as_ref())
+                                        .ok();
+                                }
                                 if let Some(file) = guard.as_mut() {
                                     let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S");
                                     let _ = writeln!(file, "{} [stderr] {}", timestamp, clean_line);
