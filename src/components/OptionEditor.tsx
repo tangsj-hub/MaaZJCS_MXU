@@ -600,8 +600,48 @@ export function OptionEditor({
   const selectedCaseName =
     value?.type === 'select' ? value.caseName : optionDef.default_case || optionDef.cases[0]?.name;
 
+  // 动态过滤 cases：根据 dungeon_type 过滤 dungeon_difficulty
+  const filteredCases = useMemo(() => {
+    if (optionKey === 'dungeon_difficulty') {
+      const dungeonTypeValue = allOptionValues['dungeon_type']?.type === 'select'
+        ? allOptionValues['dungeon_type'].caseName
+        : projectInterface?.option?.['dungeon_type']?.type === 'select'
+          ? projectInterface.option['dungeon_type'].default_case
+          : 'sea_palace'; // 默认值
+
+      // 从 dungeon_type case 的 available_difficulties 配置读取支持的难度列表
+      const dungeonTypeOption = projectInterface?.option?.['dungeon_type'];
+      if (dungeonTypeOption?.type === 'select') {
+        const selectedCase = dungeonTypeOption.cases?.find((c) => c.name === dungeonTypeValue);
+        const availableDifficulties = selectedCase?.available_difficulties;
+
+        if (availableDifficulties && availableDifficulties.length > 0) {
+          return optionDef.cases.filter((c) => availableDifficulties.includes(c.name));
+        }
+      }
+    }
+    return optionDef.cases;
+  }, [optionKey, allOptionValues, optionDef.cases, projectInterface]);
+
+  // 如果当前选中的 case 被过滤掉了，自动切换到默认值
+  useEffect(() => {
+    if (optionKey === 'dungeon_difficulty' && value?.type === 'select') {
+      const isSelectedValid = filteredCases.some((c) => c.name === value.caseName);
+      if (!isSelectedValid) {
+        // 切换到第一个可用选项（通常是 normal）
+        const firstAvailable = filteredCases[0];
+        if (firstAvailable) {
+          setTaskOptionValue(instanceId, taskId, optionKey, {
+            type: 'select',
+            caseName: firstAvailable.name,
+          });
+        }
+      }
+    }
+  }, [optionKey, filteredCases, value, instanceId, taskId, setTaskOptionValue]);
+
   // 选项超过 4 个时使用 ComboBox（带搜索功能）
-  const useComboBox = optionDef.cases.length > 4;
+  const useComboBox = filteredCases.length > 4;
   const SelectComponent = useComboBox ? OptionSelectComboBox : OptionSelectDropdown;
 
   return (
@@ -631,7 +671,7 @@ export function OptionEditor({
           value={selectedCaseName}
           disabled={effectiveDisabled}
           basePath={basePath}
-          options={optionDef.cases.map((caseItem) => {
+          options={filteredCases.map((caseItem) => {
             const label = isMxuOption
               ? t(caseItem.label || caseItem.name)
               : resolveI18nText(caseItem.label, langKey) || caseItem.name;

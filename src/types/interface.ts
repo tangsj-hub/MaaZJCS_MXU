@@ -133,6 +133,8 @@ export interface CaseItem {
   icon?: string;
   option?: string[];
   pipeline_override?: Record<string, unknown>;
+  /** MXU 扩展：该选项支持的子选项列表（例如副本类型支持的难度列表） */
+  available_difficulties?: string[];
 }
 
 export interface InputItem {
@@ -214,21 +216,21 @@ export interface SelectedTask {
 
 export type OptionValue =
   | {
-      type: 'select';
-      caseName: string;
-    }
+    type: 'select';
+    caseName: string;
+  }
   | {
-      type: 'checkbox';
-      caseNames: string[];
-    }
+    type: 'checkbox';
+    caseNames: string[];
+  }
   | {
-      type: 'switch';
-      value: boolean;
-    }
+    type: 'switch';
+    value: boolean;
+  }
   | {
-      type: 'input';
-      values: Record<string, string>;
-    };
+    type: 'input';
+    values: Record<string, string>;
+  };
 
 // 保存的设备信息（运行时使用）
 export interface SavedDeviceInfo {
