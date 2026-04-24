@@ -66,6 +66,7 @@ async function stopAgentIfNeeded(instanceId: string) {
 
 async function finalizeTaskRun(instanceId: string, status: 'Succeeded' | 'Failed') {
   await stopAgentIfNeeded(instanceId);
+  clearDeferredIterations();
 
   const state = useAppStore.getState();
   state.setInstanceTaskStatus(instanceId, status);

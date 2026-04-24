@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "mxu",
+  "productName": "MaaZJCS",
   "version": "0.1.0",
-  "identifier": "com.misteo.mxu",
+  "identifier": "com.misteo.maazjcs",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "mxu",
+        "title": "MaaZJCS",
         "width": 1000,
         "height": 618,
         "minWidth": 850,

@@ -513,9 +513,9 @@ export const useAppStore = create<AppState>()(
         instances: state.instances.map((i) =>
           i.id === instanceId
             ? {
-                ...i,
-                selectedTasks: i.selectedTasks.filter((t) => t.id !== taskId),
-              }
+              ...i,
+              selectedTasks: i.selectedTasks.filter((t) => t.id !== taskId),
+            }
             : i,
         ),
       })),
@@ -538,11 +538,11 @@ export const useAppStore = create<AppState>()(
         instances: state.instances.map((i) =>
           i.id === instanceId
             ? {
-                ...i,
-                selectedTasks: i.selectedTasks.map((t) =>
-                  t.id === taskId ? { ...t, enabled: !t.enabled } : t,
-                ),
-              }
+              ...i,
+              selectedTasks: i.selectedTasks.map((t) =>
+                t.id === taskId ? { ...t, enabled: !t.enabled } : t,
+              ),
+            }
             : i,
         ),
       })),
@@ -552,11 +552,11 @@ export const useAppStore = create<AppState>()(
         instances: state.instances.map((i) =>
           i.id === instanceId
             ? {
-                ...i,
-                selectedTasks: i.selectedTasks.map((t) =>
-                  t.id === taskId ? { ...t, expanded: !t.expanded } : t,
-                ),
-              }
+              ...i,
+              selectedTasks: i.selectedTasks.map((t) =>
+                t.id === taskId ? { ...t, expanded: !t.expanded } : t,
+              ),
+            }
             : i,
         ),
       })),
@@ -621,9 +621,9 @@ export const useAppStore = create<AppState>()(
         instances: state.instances.map((i) =>
           i.id === instanceId
             ? {
-                ...i,
-                selectedTasks: i.selectedTasks.map((t) => ({ ...t, enabled })),
-              }
+              ...i,
+              selectedTasks: i.selectedTasks.map((t) => ({ ...t, enabled })),
+            }
             : i,
         ),
       })),
@@ -633,9 +633,9 @@ export const useAppStore = create<AppState>()(
         instances: state.instances.map((i) =>
           i.id === instanceId
             ? {
-                ...i,
-                selectedTasks: i.selectedTasks.map((t) => ({ ...t, expanded })),
-              }
+              ...i,
+              selectedTasks: i.selectedTasks.map((t) => ({ ...t, expanded })),
+            }
             : i,
         ),
       })),
@@ -645,11 +645,11 @@ export const useAppStore = create<AppState>()(
         instances: state.instances.map((i) =>
           i.id === instanceId
             ? {
-                ...i,
-                selectedTasks: i.selectedTasks.map((t) =>
-                  t.id === taskId ? { ...t, customName: newName || undefined } : t,
-                ),
-              }
+              ...i,
+              selectedTasks: i.selectedTasks.map((t) =>
+                t.id === taskId ? { ...t, customName: newName || undefined } : t,
+              ),
+            }
             : i,
         ),
       })),
@@ -660,11 +660,11 @@ export const useAppStore = create<AppState>()(
         instances: state.instances.map((i) =>
           i.id === instanceId
             ? {
-                ...i,
-                selectedTasks: i.selectedTasks.map((t) =>
-                  t.id === taskId ? { ...t, loopCount: clamped <= 1 ? undefined : clamped } : t,
-                ),
-              }
+              ...i,
+              selectedTasks: i.selectedTasks.map((t) =>
+                t.id === taskId ? { ...t, loopCount: clamped <= 1 ? undefined : clamped } : t,
+              ),
+            }
             : i,
         ),
       }));
@@ -676,11 +676,11 @@ export const useAppStore = create<AppState>()(
         instances: state.instances.map((i) =>
           i.id === instanceId
             ? {
-                ...i,
-                selectedTasks: i.selectedTasks.map((t) =>
-                  t.id === taskId ? { ...t, loopDelay: clamped <= 0 ? undefined : clamped } : t,
-                ),
-              }
+              ...i,
+              selectedTasks: i.selectedTasks.map((t) =>
+                t.id === taskId ? { ...t, loopDelay: clamped <= 0 ? undefined : clamped } : t,
+              ),
+            }
             : i,
         ),
       }));
@@ -985,6 +985,8 @@ export const useAppStore = create<AppState>()(
                 enabled: t.enabled,
                 optionValues: t.optionValues,
                 expanded: false,
+                ...(t.loopCount && t.loopCount > 1 ? { loopCount: t.loopCount } : {}),
+                ...(t.loopDelay && t.loopDelay > 0 ? { loopDelay: t.loopDelay } : {}),
               };
             }
 
@@ -1007,6 +1009,8 @@ export const useAppStore = create<AppState>()(
               enabled: t.enabled,
               optionValues: mergedValues,
               expanded: false,
+              ...(t.loopCount && t.loopCount > 1 ? { loopCount: t.loopCount } : {}),
+              ...(t.loopDelay && t.loopDelay > 0 ? { loopDelay: t.loopDelay } : {}),
             };
           });
 
@@ -1703,8 +1707,8 @@ export const useAppStore = create<AppState>()(
         scheduleExecutions: info
           ? { ...state.scheduleExecutions, [instanceId]: info }
           : Object.fromEntries(
-              Object.entries(state.scheduleExecutions).filter(([id]) => id !== instanceId),
-            ),
+            Object.entries(state.scheduleExecutions).filter(([id]) => id !== instanceId),
+          ),
       })),
 
     clearScheduleExecution: (instanceId) =>
@@ -1819,6 +1823,8 @@ function generateConfig(): MxuConfig {
         customName: t.customName,
         enabled: t.enabled,
         optionValues: t.optionValues,
+        ...(t.loopCount && t.loopCount > 1 ? { loopCount: t.loopCount } : {}),
+        ...(t.loopDelay && t.loopDelay > 0 ? { loopDelay: t.loopDelay } : {}),
       })),
       schedulePolicies: inst.schedulePolicies,
       preAction: inst.preAction,

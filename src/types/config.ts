@@ -19,6 +19,8 @@ export interface SavedTask {
   customName?: string; // 用户自定义名称
   enabled: boolean;
   optionValues: Record<string, OptionValue>;
+  loopCount?: number; // 循环次数
+  loopDelay?: number; // 循环间隔（毫秒）
 }
 
 // 保存的设备信息

@@ -769,13 +769,13 @@ export function Toolbar({ showAddPanel, onToggleAddPanel }: ToolbarProps) {
         // PI v2.5.0: 构建 Agent 子进程环境变量
         const piEnvs = agentConfigs?.length
           ? buildPiEnvVars({
-              projectInterface,
-              controllerName,
-              resourceName,
-              translations,
-              language,
-              maaVersion,
-            })
+            projectInterface,
+            controllerName,
+            resourceName,
+            translations,
+            language,
+            maaVersion,
+          })
           : undefined;
 
         updateInstance(targetId, { isRunning: true });
@@ -1027,6 +1027,7 @@ export function Toolbar({ showAddPanel, onToggleAddPanel }: ToolbarProps) {
     try {
       log.info('停止任务...', targetInstanceId);
       cancelTaskQueueMonitor(targetInstanceId);
+      clearDeferredIterations();
       await maaService.stopTask(targetInstanceId);
       const stopped = await waitForTaskStop(targetInstanceId);
       if (!stopped) {

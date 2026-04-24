@@ -202,6 +202,7 @@ function InstanceCard({ instanceId, instanceName, isActive, onSelect }: Instance
           log.info(`[${instanceName}] 停止任务...`);
           setIsStopping(true);
           cancelTaskQueueMonitor(instanceId);
+          clearDeferredIterations();
           await maaService.stopTask(instanceId);
           const agentConfigs = normalizeAgentConfigs(projectInterface?.agent);
           if (agentConfigs && agentConfigs.length > 0) {
@@ -283,13 +284,13 @@ function InstanceCard({ instanceId, instanceName, isActive, onSelect }: Instance
           // PI v2.5.0: 构建 Agent 子进程环境变量
           const piEnvs = agentConfigs?.length
             ? buildPiEnvVars({
-                projectInterface,
-                controllerName: currentControllerName,
-                resourceName: currentResourceName,
-                translations,
-                language,
-                maaVersion,
-              })
+              projectInterface,
+              controllerName: currentControllerName,
+              resourceName: currentResourceName,
+              translations,
+              language,
+              maaVersion,
+            })
             : undefined;
 
           updateInstance(instanceId, { isRunning: true });
