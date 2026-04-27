@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, ChevronRight, X, Loader2, FileText, Link, AlertCircle } from 'lucide-react';
+import { GripVertical, ChevronRight, X, Loader2, FileText, Link, AlertCircle, Repeat } from 'lucide-react';
 import { useAppStore, type TaskRunStatus } from '@/stores/appStore';
 import { maaService } from '@/services/maaService';
 import { useResolvedContent } from '@/services/contentResolver';
@@ -300,6 +300,9 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editName, setEditName] = useState('');
+  const [showLoopDialog, setShowLoopDialog] = useState(false);
+  const [loopCountInput, setLoopCountInput] = useState(1);
+  const [loopDelayInput, setLoopDelayInput] = useState(0);
 
   const {
     projectInterface,
@@ -324,6 +327,8 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
     interfaceTranslations,
     animatingTaskIds,
     removeAnimatingTaskId,
+    setTaskLoopCount,
+    setTaskLoopDelay,
   } = useAppStore();
 
   // 获取任务运行状态
@@ -689,6 +694,21 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
         },
       });
 
+      // Insert "set loop count" after rename
+      const renameIdx = menuItems.findIndex((m) => m.id === 'rename');
+      if (renameIdx !== -1) {
+        menuItems.splice(renameIdx + 1, 0, {
+          id: 'set-loop-count',
+          label: t('contextMenu.setLoopCount'),
+          icon: Repeat,
+          onClick: () => {
+            setLoopCountInput(task.loopCount ?? 1);
+            setLoopDelayInput(task.loopDelay ?? 0);
+            setShowLoopDialog(true);
+          },
+        });
+      }
+
       showMenu(e, menuItems);
     },
     [
@@ -862,6 +882,16 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
                     ({originalLabel})
                   </span>
                 )}
+                {task.loopCount && task.loopCount > 1 && (
+                  <span className="inline-flex items-center px-1 py-0 text-[10px] font-medium rounded bg-accent/15 text-accent border border-accent/30">
+                    {t('taskItem.loopCountBadge', { count: task.loopCount })}
+                  </span>
+                )}
+                {task.loopDelay && task.loopDelay > 0 && (
+                  <span className="inline-flex items-center px-1 py-0 text-[10px] font-medium rounded bg-bg-tertiary text-text-muted">
+                    {t('taskItem.loopDelayBadge', { delay: task.loopDelay })}
+                  </span>
+                )}
               </div>
 
               {/* 不带选项的任务：直接显示不兼容警告 */}
@@ -998,6 +1028,48 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
       {menuState.isOpen && (
         <ContextMenu items={menuState.items} position={menuState.position} onClose={hideMenu} />
       )}
+
+      {/* 循环设置弹窗 */}
+      <ConfirmDialog
+        open={showLoopDialog}
+        title={t('taskItem.loopCountTitle')}
+        message={t('taskItem.loopCountMessage')}
+        cancelText={t('common.cancel')}
+        confirmText={t('common.confirm')}
+        onCancel={() => setShowLoopDialog(false)}
+        onConfirm={() => {
+          setTaskLoopCount(instanceId, task.id, loopCountInput);
+          setTaskLoopDelay(instanceId, task.id, loopDelayInput);
+          setShowLoopDialog(false);
+        }}
+      >
+        <div className="flex flex-col gap-3 mt-2">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-text-secondary">{t('taskItem.loopCountLabel')}</span>
+            <input
+              type="number"
+              min={1}
+              max={999}
+              value={loopCountInput}
+              onChange={(e) => setLoopCountInput(Number(e.target.value))}
+              className="w-full px-3 py-1.5 text-sm rounded border border-border bg-bg-primary text-text-primary"
+            />
+            <span className="text-xs text-text-muted">{t('taskItem.loopCountHint')}</span>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-text-secondary">{t('taskItem.loopDelayLabel')}</span>
+            <input
+              type="number"
+              min={0}
+              max={600000}
+              value={loopDelayInput}
+              onChange={(e) => setLoopDelayInput(Number(e.target.value))}
+              className="w-full px-3 py-1.5 text-sm rounded border border-border bg-bg-primary text-text-primary"
+            />
+            <span className="text-xs text-text-muted">{t('taskItem.loopDelayHint')}</span>
+          </label>
+        </div>
+      </ConfirmDialog>
 
       {/* 删除确认弹窗 */}
       <ConfirmDialog

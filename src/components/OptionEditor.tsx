@@ -55,6 +55,8 @@ interface OptionEditorProps {
   controllerIncompatible?: boolean;
   /** 父级不兼容原因（用于嵌套提示文案） */
   parentIncompatibilityReason?: IncompatibilityReason;
+  /** 父级 case 的 available_difficulties，用于过滤当前选项的可选 case */
+  availableCases?: string[];
 }
 
 type IncompatibilityReason = 'controller' | 'resource';
@@ -315,6 +317,7 @@ export function OptionEditor({
   disabled = false,
   controllerIncompatible = false,
   parentIncompatibilityReason,
+  availableCases,
 }: OptionEditorProps) {
   const { t } = useTranslation();
   const {
@@ -473,6 +476,7 @@ export function OptionEditor({
                 disabled={effectiveDisabled}
                 controllerIncompatible={isOptionIncompatible}
                 parentIncompatibilityReason={incompatibleReasonType}
+                availableCases={selectedCase?.available_difficulties}
               />
             ))}
           </div>
@@ -506,7 +510,7 @@ export function OptionEditor({
           translations={translations}
         />
         <div className="grid grid-cols-4 gap-1">
-          {optionDef.cases.map((caseItem) => {
+          {(availableCases ? optionDef.cases.filter((c) => availableCases.includes(c.name)) : optionDef.cases).map((caseItem) => {
             const caseLabel = isMxuOption
               ? t(caseItem.label || caseItem.name)
               : resolveI18nText(caseItem.label, langKey) || caseItem.name;
@@ -641,7 +645,7 @@ export function OptionEditor({
           value={selectedCaseName}
           disabled={effectiveDisabled}
           basePath={basePath}
-          options={optionDef.cases.map((caseItem) => {
+          options={(availableCases ? optionDef.cases.filter((c) => availableCases.includes(c.name)) : optionDef.cases).map((caseItem) => {
             const label = isMxuOption
               ? t(caseItem.label || caseItem.name)
               : resolveI18nText(caseItem.label, langKey) || caseItem.name;
@@ -674,6 +678,7 @@ export function OptionEditor({
               disabled={effectiveDisabled}
               controllerIncompatible={isOptionIncompatible}
               parentIncompatibilityReason={incompatibleReasonType}
+              availableCases={selectedCase?.available_difficulties}
             />
           ))}
         </div>

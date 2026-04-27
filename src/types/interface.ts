@@ -141,6 +141,8 @@ export interface CaseItem {
   icon?: string;
   option?: string[];
   pipeline_override?: Record<string, unknown>;
+  /** MXU 扩展：该选项支持的子选项列表（例如副本类型支持的难度列表） */
+  available_difficulties?: string[];
 }
 
 export interface InputItem {
@@ -216,6 +218,8 @@ export interface SelectedTask {
   enabled: boolean;
   optionValues: Record<string, OptionValue>;
   expanded: boolean;
+  loopCount?: number; // 循环次数，默认 1
+  loopDelay?: number; // 每次循环结束后等待时长（毫秒），默认 0
 }
 
 export type OptionValue =

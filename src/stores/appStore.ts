@@ -758,6 +758,38 @@ export const useAppStore = create<AppState>()(
         ),
       })),
 
+    setTaskLoopCount: (instanceId, taskId, count) => {
+      const clamped = Math.max(1, Math.min(Math.round(count), 999));
+      set((state) => ({
+        instances: state.instances.map((i) =>
+          i.id === instanceId
+            ? {
+                ...i,
+                selectedTasks: i.selectedTasks.map((t) =>
+                  t.id === taskId ? { ...t, loopCount: clamped <= 1 ? undefined : clamped } : t,
+                ),
+              }
+            : i,
+        ),
+      }));
+    },
+
+    setTaskLoopDelay: (instanceId, taskId, delay) => {
+      const clamped = Math.max(0, Math.min(Math.round(delay), 600000));
+      set((state) => ({
+        instances: state.instances.map((i) =>
+          i.id === instanceId
+            ? {
+                ...i,
+                selectedTasks: i.selectedTasks.map((t) =>
+                  t.id === taskId ? { ...t, loopDelay: clamped <= 0 ? undefined : clamped } : t,
+                ),
+              }
+            : i,
+        ),
+      }));
+    },
+
     // 复制任务
     duplicateTask: (instanceId, taskId) => {
       const state = get();
@@ -1052,6 +1084,8 @@ export const useAppStore = create<AppState>()(
                 enabled: t.enabled,
                 optionValues: t.optionValues,
                 expanded: prevExpandedByTask.get(t.id) ?? false,
+                ...(t.loopCount && t.loopCount > 1 ? { loopCount: t.loopCount } : {}),
+                ...(t.loopDelay && t.loopDelay > 0 ? { loopDelay: t.loopDelay } : {}),
               };
             }
 
@@ -1074,6 +1108,8 @@ export const useAppStore = create<AppState>()(
               enabled: t.enabled,
               optionValues: mergedValues,
               expanded: prevExpandedByTask.get(t.id) ?? false,
+              ...(t.loopCount && t.loopCount > 1 ? { loopCount: t.loopCount } : {}),
+              ...(t.loopDelay && t.loopDelay > 0 ? { loopDelay: t.loopDelay } : {}),
             };
           });
 
@@ -1791,6 +1827,8 @@ export const useAppStore = create<AppState>()(
           enabled: t.enabled,
           optionValues: cleanOptionValues(t.optionValues, pi),
           expanded: false,
+          ...(t.loopCount && t.loopCount > 1 ? { loopCount: t.loopCount } : {}),
+          ...(t.loopDelay && t.loopDelay > 0 ? { loopDelay: t.loopDelay } : {}),
         })),
         isRunning: false,
         schedulePolicies: closedInstance.schedulePolicies,
@@ -2011,6 +2049,8 @@ function generateConfig(): MxuConfig {
         customName: t.customName,
         enabled: t.enabled,
         optionValues: t.optionValues,
+        ...(t.loopCount && t.loopCount > 1 ? { loopCount: t.loopCount } : {}),
+        ...(t.loopDelay && t.loopDelay > 0 ? { loopDelay: t.loopDelay } : {}),
       })),
       schedulePolicies: inst.schedulePolicies,
       preActions: inst.preActions,

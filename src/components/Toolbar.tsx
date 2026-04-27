@@ -31,6 +31,7 @@ import {
 } from '@/components/connection/callbackCache';
 import { scheduleService } from '@/services/scheduleService';
 import { stopInstanceTasks } from '@/services/taskStopService';
+import { clearDeferredIterations } from '@/services/taskMonitor';
 import { isTauri } from '@/utils/paths';
 import { buildPiEnvVars } from '@/utils/piEnv';
 
@@ -1187,6 +1188,7 @@ export function Toolbar({ showAddPanel, onToggleAddPanel, className }: ToolbarPr
         }
         return;
       }
+      clearDeferredIterations();
       const stopped = await stopInstanceTasks(targetInstanceId);
       if (!stopped) {
         log.warn('等待任务停止超时，保留运行状态以避免 UI 与实际不一致');

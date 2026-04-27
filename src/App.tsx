@@ -30,6 +30,7 @@ import {
   stopInstanceTasksAndExitApp,
 } from '@/services';
 import { loadIconAsDataUrl } from '@/services/contentResolver';
+import { notifyTasksCompleted } from '@/services/taskMonitor';
 import * as wsService from '@/services/wsService';
 import {
   downloadUpdate,
@@ -1185,6 +1186,9 @@ function App() {
       kind === 'tasks-completed';
 
     const handleStateChanged = (_instanceId: string, kind: string) => {
+      if (kind === 'tasks-completed') {
+        notifyTasksCompleted(_instanceId);
+      }
       if (isTaskKind(kind)) pendingTaskKind = true;
       if (debounceTimer) clearTimeout(debounceTimer);
       const shouldSyncRunning = pendingTaskKind;
