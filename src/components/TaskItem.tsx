@@ -301,8 +301,8 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editName, setEditName] = useState('');
   const [showLoopDialog, setShowLoopDialog] = useState(false);
-  const [loopCountInput, setLoopCountInput] = useState(1);
-  const [loopDelayInput, setLoopDelayInput] = useState(0);
+  const [loopCountInput, setLoopCountInput] = useState('1');
+  const [loopDelayInput, setLoopDelayInput] = useState('0');
 
   const {
     projectInterface,
@@ -518,6 +518,13 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
     return () => element.removeEventListener('animationend', handleAnimationEnd);
   }, [isAnimating, task.id, removeAnimatingTaskId]);
 
+  useEffect(() => {
+    if (!showLoopDialog) return;
+
+    setLoopCountInput(String(task.loopCount ?? 1));
+    setLoopDelayInput(String(task.loopDelay ?? 0));
+  }, [showLoopDialog, task.loopCount, task.loopDelay]);
+
   // 对于 MXU 内置任务，使用 t() 翻译，否则使用 resolveI18nText
   const originalLabel = taskDef
     ? isMxuTask
@@ -702,8 +709,6 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
           label: t('contextMenu.setLoopCount'),
           icon: Repeat,
           onClick: () => {
-            setLoopCountInput(task.loopCount ?? 1);
-            setLoopDelayInput(task.loopDelay ?? 0);
             setShowLoopDialog(true);
           },
         });
@@ -1038,8 +1043,17 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
         confirmText={t('common.confirm')}
         onCancel={() => setShowLoopDialog(false)}
         onConfirm={() => {
-          setTaskLoopCount(instanceId, task.id, loopCountInput);
-          setTaskLoopDelay(instanceId, task.id, loopDelayInput);
+          const parsedLoopCount = Number.parseInt(loopCountInput, 10);
+          const parsedLoopDelay = Number.parseInt(loopDelayInput, 10);
+          const normalizedLoopCount = Number.isNaN(parsedLoopCount)
+            ? 1
+            : Math.min(999, Math.max(1, parsedLoopCount));
+          const normalizedLoopDelay = Number.isNaN(parsedLoopDelay)
+            ? 0
+            : Math.min(600000, Math.max(0, parsedLoopDelay));
+
+          setTaskLoopCount(instanceId, task.id, normalizedLoopCount);
+          setTaskLoopDelay(instanceId, task.id, normalizedLoopDelay);
           setShowLoopDialog(false);
         }}
       >
@@ -1051,7 +1065,7 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
               min={1}
               max={999}
               value={loopCountInput}
-              onChange={(e) => setLoopCountInput(Number(e.target.value))}
+              onChange={(e) => setLoopCountInput(e.target.value)}
               className="w-full px-3 py-1.5 text-sm rounded border border-border bg-bg-primary text-text-primary"
             />
             <span className="text-xs text-text-muted">{t('taskItem.loopCountHint')}</span>
@@ -1063,7 +1077,7 @@ export function TaskItem({ instanceId, task }: TaskItemProps) {
               min={0}
               max={600000}
               value={loopDelayInput}
-              onChange={(e) => setLoopDelayInput(Number(e.target.value))}
+              onChange={(e) => setLoopDelayInput(e.target.value)}
               className="w-full px-3 py-1.5 text-sm rounded border border-border bg-bg-primary text-text-primary"
             />
             <span className="text-xs text-text-muted">{t('taskItem.loopDelayHint')}</span>

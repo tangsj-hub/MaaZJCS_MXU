@@ -34,10 +34,18 @@ export function ConfirmDialog({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const cancelBtnRef = useRef<HTMLButtonElement>(null);
+  const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (open && !wasOpenRef.current) {
+      cancelBtnRef.current?.focus();
+    }
+
+    wasOpenRef.current = open;
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    cancelBtnRef.current?.focus();
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
